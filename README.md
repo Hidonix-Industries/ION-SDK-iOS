@@ -2,6 +2,9 @@
 ## Description
 This is the official ION SDK for the iOS platform. It is distributed using Swift Package Manager.
 
+## Minimum requirements
+This SDK is available from iOS 15 and above.
+
 ## How to use it
 1. Add the latest release as SPM dependency to your XCode project or download and unzip the .xcframework file from the Releases page.
 2. Add your generated <api-key> string to the project Info.Plist using the key: ionSdkApiClientKey
@@ -16,3 +19,4 @@ This is the official ION SDK for the iOS platform. It is distributed using Swift
 - Venue enter/exit detection
 - Geofence event detection
 - Poi fetching (via delegate method and on-demand)
+

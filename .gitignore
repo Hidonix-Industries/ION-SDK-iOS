@@ -1,0 +1,39 @@
+# --- macOS ---
+.DS_Store
+
+# --- Swift Package Manager ---
+# The directory where SPM downloads dependencies and builds
+.build/
+
+# Local Xcode configuration for the package (important to ignore)
+.swiftpm/
+
+# Obsolete SPM directories
+Packages/
+
+# --- Xcode ---
+# User-specific settings (breakpoints, open windows, etc.)
+xcuserdata/
+*.xccheckout
+*.moved-aside
+*.xcuserstate
+
+# If you accidentally generate an Xcode project inside the folder,
+# usually in pure SPM repos it is ignored, but you can keep it if needed.
+# Uncomment the line below if you want to completely ignore the project file:
+# *.xcodeproj/
+
+# Build cache (if configured in the project folder)
+DerivedData/
+
+# --- Binary Distribution (Specific to your case) ---
+# Ignore zip files to avoid accidentally committing
+# the archive that should go into "Releases".
+*.zip
+*.framework.zip
+*.xcframework.zip
+
+# If using the "Remote" method, the xcframework should not be in the repo.
+# If instead you decide to commit the unzipped xcframework,
+# leave the line below commented out. If you want to ignore it, remove the hash:
+# *.xcframework/

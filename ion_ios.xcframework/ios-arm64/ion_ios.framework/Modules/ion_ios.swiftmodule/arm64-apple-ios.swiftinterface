@@ -1,20 +1,47 @@
 // swift-interface-format-version: 1.0
-// swift-compiler-version: Apple Swift version 6.2.3 (swiftlang-6.2.3.3.21 clang-1700.6.3.2)
-// swift-module-flags: -target arm64-apple-ios15.0 -enable-objc-interop -enable-library-evolution -swift-version 6 -enforce-exclusivity=checked -O -enable-experimental-feature DebugDescriptionMacro -module-name ion_ios -package-name ion_ios_sdk_private
-// swift-module-flags-ignorable: -no-verify-emitted-module-interface -formal-cxx-interoperability-mode=off -interface-compiler-version 6.2.3
+// swift-compiler-version: Apple Swift version 6.2 (swiftlang-6.2.0.19.9 clang-1700.3.19.1)
+// swift-module-flags: -target arm64-apple-ios15.0 -enable-objc-interop -enable-library-evolution -swift-version 6 -enforce-exclusivity=checked -O -enable-experimental-feature DebugDescriptionMacro -module-name ion_ios -package-name ion_ios_sdk
+// swift-module-flags-ignorable: -no-verify-emitted-module-interface -formal-cxx-interoperability-mode=off -interface-compiler-version 6.2
 import Combine
 import CoreGraphics
 import CoreLocation
 import CoreMotion
+import CryptoKit
+import CxxStocorWrapper
 import Foundation
+import Networking
 import Swift
 import SwiftUI
 import _Concurrency
 import _StringProcessing
 import _SwiftConcurrencyShims
 import simd
+public struct AcquisitionLevel : Swift.Codable {
+  public let id: Swift.String
+  public let levelNumber: Swift.Int
+  public let map: Swift.String
+  public let mask: Swift.String
+  public let svg: Swift.String
+  public let rotation: Swift.Double
+  public let width: Swift.Double
+  public let height: Swift.Double
+  public let beaconsBaseUUID: Swift.String
+  public let georeference: [ion_ios.GeoCoordinate]
+  public let anchors: [ion_ios.Anchor]
+  public func encode(to encoder: any Swift.Encoder) throws
+  public init(from decoder: any Swift.Decoder) throws
+}
+public struct Anchor : Swift.Codable {
+  public let id: Swift.String
+  public let number: Swift.String
+  public let x: Swift.Double
+  public let y: Swift.Double
+  public let heading: Swift.Double
+  public func encode(to encoder: any Swift.Encoder) throws
+  public init(from decoder: any Swift.Decoder) throws
+}
 public enum GeofenceIndoorCategory : Swift.Int, Swift.Codable, Swift.Sendable {
-  case standard
+  case restricted
   case crowdManagement
   public var description: Swift.String {
     get
@@ -61,6 +88,57 @@ public struct IndoorGeofenceResponse : Swift.Codable, Swift.Sendable {
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
+final public class SystemGeofence : Swift.Codable, Swift.Sendable {
+  final public let id: Swift.Int
+  final public let title: Swift.String
+  final public let msg: Swift.String
+  final public let triggerEvents: [ion_ios.GeofenceTriggerEvent]
+  final public let dwellTime: Swift.Double
+  final public let systemGeofenceType: ion_ios.SystemGeofenceType?
+  final public let systemGeofenceUse: ion_ios.SystemGeofenceUse?
+  final public let triggerNotMappedBeacon: Swift.String?
+  final public let nextBuildingId: Swift.Int?
+  final public let nextFloorId: Swift.Int?
+  final public let geofence: [ion_ios.GeoCoordinate]
+  final public let relatedGeofence: ion_ios.SystemGeofence?
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init(id: Swift.Int, title: Swift.String, msg: Swift.String, triggerEvents: [ion_ios.GeofenceTriggerEvent], dwellTime: Swift.Double, systemGeofenceType: ion_ios.SystemGeofenceType, systemGeofenceUse: ion_ios.SystemGeofenceUse, triggerNotMappedBeacon: Swift.String?, nextBuildingId: Swift.Int, nextFloorId: Swift.Int, geofence: [ion_ios.GeoCoordinate], relatedGeofence: ion_ios.SystemGeofence? = nil)
+  #endif
+  @objc deinit
+  final public func encode(to encoder: any Swift.Encoder) throws
+  public init(from decoder: any Swift.Decoder) throws
+}
+public enum SystemGeofenceType : Swift.Int, Swift.Codable, Swift.Sendable {
+  case notMapped
+  case buildingTransition
+  case indoorOutdoorTransition
+  public var description: Swift.String {
+    get
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init?(rawValue: Swift.Int)
+  #endif
+  public typealias RawValue = Swift.Int
+  public var rawValue: Swift.Int {
+    get
+  }
+}
+public enum SystemGeofenceUse : Swift.Int, Swift.Codable, Swift.Sendable {
+  case mapped
+  case notMapped
+  case indoorTransition
+  case outdoorTransition
+  public var description: Swift.String {
+    get
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init?(rawValue: Swift.Int)
+  #endif
+  public typealias RawValue = Swift.Int
+  public var rawValue: Swift.Int {
+    get
+  }
+}
 public struct FullStandardPoi : Swift.Codable, Swift.Sendable, ion_ios.Poi {
   public let id: Swift.Int
   public let name: Swift.String
@@ -75,6 +153,10 @@ public struct FullStandardPoi : Swift.Codable, Swift.Sendable, ion_ios.Poi {
   public let hoursOfOperation: [ion_ios.HourOfOperation]
   public let latitude: Swift.Double
   public let longitude: Swift.Double
+  public let floorMapId: Swift.Int?
+  public let floorNumber: Swift.String?
+  public let buildingId: Swift.Int?
+  public let buildingName: Swift.String?
   public var typeValue: Swift.String
   public var categoryValue: Swift.String
   public var statusValue: Swift.String
@@ -147,6 +229,11 @@ public struct ServicePoi : Swift.Codable, Swift.Sendable, ion_ios.Poi {
   public let category: Swift.Int
   public let latitude: Swift.Double
   public let longitude: Swift.Double
+  public let floorMapId: Swift.Int?
+  public let floorNumber: Swift.String?
+  public let buildingId: Swift.Int?
+  public let buildingName: Swift.String?
+  public let imageUrl: Swift.String?
   public var typeValue: Swift.String
   public var categoryValue: Swift.String
   public func encode(to encoder: any Swift.Encoder) throws
@@ -159,6 +246,11 @@ public struct StandardPoi : Swift.Codable, Swift.Sendable, ion_ios.Poi {
   public let category: Swift.Int
   public let latitude: Swift.Double
   public let longitude: Swift.Double
+  public let floorMapId: Swift.Int?
+  public let floorNumber: Swift.String?
+  public let buildingId: Swift.Int?
+  public let buildingName: Swift.String?
+  public let imageUrl: Swift.String?
   public var typeValue: Swift.String
   public var categoryValue: Swift.String
   public func encode(to encoder: any Swift.Encoder) throws
@@ -176,7 +268,7 @@ public struct Beacon : Swift.Codable, Swift.Hashable, Swift.Sendable {
 public struct Building : Swift.Codable, Swift.Equatable, Swift.Sendable {
   public let name: Swift.String
   public let id: Swift.Int
-  public let beacons_base_uuid: Swift.String
+  public let beacons_base_uuids: [Swift.String]
   public let address: Swift.String
   public let ground_level: Swift.Int
   public let outdoorLevel: ion_ios.OutdoorLevel?
@@ -188,6 +280,7 @@ public struct Building : Swift.Codable, Swift.Equatable, Swift.Sendable {
   public init(from decoder: any Swift.Decoder) throws
 }
 public struct GeoCoordinate : Swift.Codable, Swift.Sendable {
+  public init(lat: Swift.Double, lng: Swift.Double)
   public var lat: Swift.Double
   public var lng: Swift.Double
   public func encode(to encoder: any Swift.Encoder) throws
@@ -203,8 +296,21 @@ public struct Level : Swift.Codable, Swift.Sendable {
   public var servicePois: [ion_ios.ServicePoi]
   public let mapLastUpdate: Swift.Int
   public var indoor_geofences: [ion_ios.IndoorGeofence]?
+  public var system_geofences: [ion_ios.SystemGeofence]?
   public var retrievedMap: ion_ios.NavigationMap!
   public static let defaultData: ion_ios.Level
+  public func encode(to encoder: any Swift.Encoder) throws
+  public init(from decoder: any Swift.Decoder) throws
+}
+public struct LevelInfo : Swift.Codable, Swift.Sendable {
+  public var name: Swift.String?
+  public var number: Swift.Int?
+  public var id: Swift.Int
+  public var buildingId: Swift.Int
+  public var buildingName: Swift.String?
+  public var imageUrl: Swift.String?
+  public var georeference: [ion_ios.GeoCoordinate]?
+  public var rotation: Swift.Double
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -212,10 +318,6 @@ public struct LevelMap : Swift.Codable, Swift.Sendable {
   public var map_floor_url: Swift.String
   public var width: Swift.Double
   public var height: Swift.Double
-  public var x_min: Swift.Double
-  public var x_max: Swift.Double
-  public var y_min: Swift.Double
-  public var y_max: Swift.Double
   public var rotation: Swift.Double
   public var georeference: [ion_ios.GeoCoordinate]
   public var beacons: [ion_ios.Beacon]
@@ -225,7 +327,7 @@ public struct LevelMap : Swift.Codable, Swift.Sendable {
 public struct LightBuilding : Swift.Codable, Swift.Sendable {
   public let name: Swift.String
   public let id: Swift.Int
-  public let beacons_base_uuid: Swift.String
+  public let beacons_base_uuids: [Swift.String]
   public let address: Swift.String
   public let ota: [ion_ios.GeoCoordinate]
   public func encode(to encoder: any Swift.Encoder) throws
@@ -241,7 +343,6 @@ public struct Location : Swift.Codable, Swift.Sendable {
   public init(from decoder: any Swift.Decoder) throws
 }
 public struct NavigationMap : Swift.Codable, Swift.Sendable {
-  public var pressure: Swift.Double
   public var map: ion_ios.LevelMap
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
@@ -253,6 +354,93 @@ public struct OutdoorLevel : Swift.Codable, Swift.Sendable {
   public var height: Swift.Double
   public var rotation: Swift.Double
   public var georeference: [ion_ios.GeoCoordinate]
+  public func encode(to encoder: any Swift.Encoder) throws
+  public init(from decoder: any Swift.Decoder) throws
+}
+public struct Route : Swift.Codable, Swift.Sendable {
+  public let type: Swift.String
+  public let features: [ion_ios.Feature]
+  public let meta: ion_ios.Meta
+  public func encode(to encoder: any Swift.Encoder) throws
+  public init(from decoder: any Swift.Decoder) throws
+}
+public struct Feature : Swift.Codable, Swift.Sendable {
+  public let type: Swift.String
+  public let geometry: ion_ios.Geometry
+  public let properties: ion_ios.Properties
+  public func encode(to encoder: any Swift.Encoder) throws
+  public init(from decoder: any Swift.Decoder) throws
+}
+public struct Geometry : Swift.Codable, Swift.Sendable {
+  public let type: Swift.String
+  public let coordinates: ion_ios.CoordinatesEnum
+  public func encode(to encoder: any Swift.Encoder) throws
+  public init(from decoder: any Swift.Decoder) throws
+}
+public enum CoordinatesEnum : Swift.Codable, Swift.Sendable {
+  case point([Swift.Double])
+  case lineString([[Swift.Double]])
+  public init(from decoder: any Swift.Decoder) throws
+  public func encode(to encoder: any Swift.Encoder) throws
+}
+public struct Properties : Swift.Codable, Swift.Sendable {
+  public let instructionType: ion_ios.NavInstructionType
+  public let instruction: Swift.String
+  public let distanceMeters: Swift.Double?
+  public let floorMapId: Swift.Int
+  public let floorFrom: Swift.String?
+  public let floorTo: Swift.String?
+  public let connectorSubType: ion_ios.ConnectorSubType?
+  public let waypointIndex: Swift.Int?
+  public func encode(to encoder: any Swift.Encoder) throws
+  public init(from decoder: any Swift.Decoder) throws
+}
+public struct Meta : Swift.Codable, Swift.Sendable {
+  public let estimatedTimeSeconds: Swift.Int
+  public let totalDistanceMeters: Swift.Double
+  public let floorChanges: Swift.Int
+  public let floorMapIds: [Swift.Int]
+  public func encode(to encoder: any Swift.Encoder) throws
+  public init(from decoder: any Swift.Decoder) throws
+}
+public enum ConnectorSubType : Swift.Int, Swift.Codable, Swift.Sendable {
+  case stairs
+  case elevator
+  case escalator
+  case ramp
+  case crossBuilding
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init?(rawValue: Swift.Int)
+  #endif
+  public typealias RawValue = Swift.Int
+  public var rawValue: Swift.Int {
+    get
+  }
+}
+public enum NavInstructionType : Swift.Int, Swift.Codable, Swift.Sendable {
+  case walk
+  case turnLeft
+  case turnRight
+  case takeElevator
+  case takeStairs
+  case takeEscalator
+  case takeRamp
+  case takeCrossBuilding
+  case arrive
+  case waypoint
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init?(rawValue: Swift.Int)
+  #endif
+  public typealias RawValue = Swift.Int
+  public var rawValue: Swift.Int {
+    get
+  }
+}
+public struct Waypoint : Swift.Codable, Swift.Sendable, Swift.Equatable {
+  public init(coordinate: ion_ios.GeoCoordinate, floorId: Swift.Int)
+  public let coordinate: ion_ios.GeoCoordinate
+  public let floorId: Swift.Int
+  public static func == (lhs: ion_ios.Waypoint, rhs: ion_ios.Waypoint) -> Swift.Bool
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -275,12 +463,22 @@ public protocol IONStreamProtocol : AnyObject {
   var buildingValues: _Concurrency.AsyncStream<ion_ios.BuildingEventEnum> { get }
   var venueValues: _Concurrency.AsyncStream<ion_ios.VenueEventEnum> { get }
   var geofenceValues: _Concurrency.AsyncStream<ion_ios.GeofenceEvent> { get }
+  var buildingTransitionGeofenceValues: _Concurrency.AsyncStream<ion_ios.BuildingTransitionGeofenceEvent> { get }
   var poiValues: _Concurrency.AsyncStream<ion_ios.PoiEvent> { get }
+  var poiForLocationValues: _Concurrency.AsyncStream<ion_ios.PoiForLocationEvent> { get }
+  var enteredNotMappedAreaValues: _Concurrency.AsyncStream<ion_ios.SystemGeofence> { get }
+  var enteredMappedAreaValues: _Concurrency.AsyncStream<ion_ios.SystemGeofence> { get }
+  var enteredOutdoorAreaValues: _Concurrency.AsyncStream<ion_ios.SystemGeofence> { get }
+  var enteredIndoorAreaValues: _Concurrency.AsyncStream<ion_ios.SystemGeofence> { get }
   #if compiler(>=5.3) && $NonescapableTypes
   func getFullStandardPoiDetail(poiID: Swift.Int) async -> ion_ios.FullStandardPoi?
   #endif
   #if compiler(>=5.3) && $NonescapableTypes
-  func getWayfindingTo(poi: any ion_ios.Poi) async -> ion_ios.Wayfinding?
+  func getRoute(endPoint: ion_ios.Waypoint, waypoints: [ion_ios.Waypoint]?, accessibilityMode: Swift.Bool?) async -> ion_ios.Route?
+  #endif
+  func checkLicensing() async -> Swift.Bool
+  #if compiler(>=5.3) && $NonescapableTypes
+  func getLevelInfo(levelId: Swift.Int) async -> ion_ios.LevelInfo?
   #endif
 }
 final public class IONStreamService : ion_ios.IONStreamProtocol {
@@ -311,14 +509,36 @@ final public class IONStreamService : ion_ios.IONStreamProtocol {
   final public var geofenceValues: _Concurrency.AsyncStream<ion_ios.GeofenceEvent> {
     get
   }
+  final public var buildingTransitionGeofenceValues: _Concurrency.AsyncStream<ion_ios.BuildingTransitionGeofenceEvent> {
+    get
+  }
   final public var poiValues: _Concurrency.AsyncStream<ion_ios.PoiEvent> {
+    get
+  }
+  final public var poiForLocationValues: _Concurrency.AsyncStream<ion_ios.PoiForLocationEvent> {
+    get
+  }
+  final public var enteredNotMappedAreaValues: _Concurrency.AsyncStream<ion_ios.SystemGeofence> {
+    get
+  }
+  final public var enteredMappedAreaValues: _Concurrency.AsyncStream<ion_ios.SystemGeofence> {
+    get
+  }
+  final public var enteredOutdoorAreaValues: _Concurrency.AsyncStream<ion_ios.SystemGeofence> {
+    get
+  }
+  final public var enteredIndoorAreaValues: _Concurrency.AsyncStream<ion_ios.SystemGeofence> {
     get
   }
   #if compiler(>=5.3) && $NonescapableTypes
   final public func getFullStandardPoiDetail(poiID: Swift.Int) async -> ion_ios.FullStandardPoi?
   #endif
   #if compiler(>=5.3) && $NonescapableTypes
-  final public func getWayfindingTo(poi: any ion_ios.Poi) async -> ion_ios.Wayfinding?
+  final public func getRoute(endPoint: ion_ios.Waypoint, waypoints: [ion_ios.Waypoint]?, accessibilityMode: Swift.Bool?) async -> ion_ios.Route?
+  #endif
+  final public func checkLicensing() async -> Swift.Bool
+  #if compiler(>=5.3) && $NonescapableTypes
+  final public func getLevelInfo(levelId: Swift.Int) async -> ion_ios.LevelInfo?
   #endif
   @objc deinit
 }
@@ -335,6 +555,12 @@ extension ion_ios.IONStreamService : ion_ios.IONLocationManagerDelegate {
   final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, triggeredIndoorGeofence event: ion_ios.GeofenceTriggerEvent, indoorGeofence: ion_ios.IndoorGeofence, indoorGeofenceResponse: ion_ios.IndoorGeofenceResponse?)
   #endif
   final public func indoorLocationManagaer(_ positionObserver: any ion_ios.IONLocationManagerProtocol, poisForFloor: ion_ios.Level, fullStandardPois: [ion_ios.FullStandardPoi], servicePois: [ion_ios.ServicePoi])
+  final public func indoorLocationManagaer(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, poisForLocation: ion_ios.Location, standardPois: [ion_ios.StandardPoi], servicePois: [ion_ios.ServicePoi])
+  final public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, buildingTransitionGeofence: ion_ios.SystemGeofence, exitedBuilding: ion_ios.Building, enteredBuilding: ion_ios.Building)
+  final public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, enteredNotMappedArea: ion_ios.SystemGeofence)
+  final public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, enteredMappedArea: ion_ios.SystemGeofence)
+  final public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, enteredOutdoorArea: ion_ios.SystemGeofence)
+  final public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, enteredIndoorArea: ion_ios.SystemGeofence)
 }
 public enum BuildingEventEnum : Swift.Sendable {
   case enter(ion_ios.Building)
@@ -349,10 +575,20 @@ public struct GeofenceEvent {
   public let indoorGeofence: ion_ios.IndoorGeofence
   public let indoorGeofenceResponse: ion_ios.IndoorGeofenceResponse?
 }
+public struct BuildingTransitionGeofenceEvent {
+  public let systemGeofence: ion_ios.SystemGeofence
+  public let exitedBuilding: ion_ios.Building
+  public let enteredBuilding: ion_ios.Building
+}
 public struct PoiEvent {
   public let level: ion_ios.Level
   public let fullStandardPois: [ion_ios.FullStandardPoi]
   public let servicePoi: [ion_ios.ServicePoi]
+}
+public struct PoiForLocationEvent {
+  public let location: ion_ios.Location
+  public let standardPois: [ion_ios.StandardPoi]
+  public let servicePois: [ion_ios.ServicePoi]
 }
 final public class IONLocationManager : ion_ios.IONLocationManagerProtocol {
   public init()
@@ -363,7 +599,11 @@ final public class IONLocationManager : ion_ios.IONLocationManagerProtocol {
   final public func getFullStandardPoiDetail(poiID: Swift.Int) async -> ion_ios.FullStandardPoi?
   #endif
   #if compiler(>=5.3) && $NonescapableTypes
-  final public func getWayfindingTo(poi: any ion_ios.Poi) async -> ion_ios.Wayfinding?
+  final public func getRoute(endPoint: ion_ios.Waypoint, waypoints: [ion_ios.Waypoint]?, accessibilityMode: Swift.Bool?) async -> ion_ios.Route?
+  #endif
+  final public func checkLicensing() async -> Swift.Bool
+  #if compiler(>=5.3) && $NonescapableTypes
+  final public func getLevelInfo(levelId: Swift.Int) async -> ion_ios.LevelInfo?
   #endif
   @objc deinit
 }
@@ -380,6 +620,13 @@ public protocol IONLocationManagerDelegate : AnyObject {
   func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, triggeredIndoorGeofence event: ion_ios.GeofenceTriggerEvent, indoorGeofence: ion_ios.IndoorGeofence, indoorGeofenceResponse: ion_ios.IndoorGeofenceResponse?)
   #endif
   func indoorLocationManagaer(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, poisForFloor: ion_ios.Level, fullStandardPois: [ion_ios.FullStandardPoi], servicePois: [ion_ios.ServicePoi])
+  func indoorLocationManagaer(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, poisForLocation: ion_ios.Location, standardPois: [ion_ios.StandardPoi], servicePois: [ion_ios.ServicePoi])
+  func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, buildingTransitionGeofence: ion_ios.SystemGeofence, exitedBuilding: ion_ios.Building, enteredBuilding: ion_ios.Building)
+  func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, enteredNotMappedArea: ion_ios.SystemGeofence)
+  func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, enteredMappedArea: ion_ios.SystemGeofence)
+  func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, enteredOutdoorArea: ion_ios.SystemGeofence)
+  func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, enteredIndoorArea: ion_ios.SystemGeofence)
+  func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, licenseIsValid: Swift.Bool)
 }
 extension ion_ios.IONLocationManagerDelegate {
   public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didUpdate position: _LocationEssentials.CLLocation)
@@ -394,6 +641,7 @@ extension ion_ios.IONLocationManagerDelegate {
   public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, triggeredIndoorGeofence event: ion_ios.GeofenceTriggerEvent, indoorGeofence: ion_ios.IndoorGeofence, indoorGeofenceResponse: ion_ios.IndoorGeofenceResponse?)
   #endif
   public func indoorLocationManagaer(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, poisForFloor: ion_ios.Level, fullStandardPois: [ion_ios.FullStandardPoi], servicePois: [ion_ios.ServicePoi])
+  public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, licenseIsValid: Swift.Bool)
 }
 public protocol IONLocationManagerProtocol : AnyObject {
   #if compiler(>=5.3) && $NonescapableTypes
@@ -405,7 +653,11 @@ public protocol IONLocationManagerProtocol : AnyObject {
   func getFullStandardPoiDetail(poiID: Swift.Int) async -> ion_ios.FullStandardPoi?
   #endif
   #if compiler(>=5.3) && $NonescapableTypes
-  func getWayfindingTo(poi: any ion_ios.Poi) async -> ion_ios.Wayfinding?
+  func getRoute(endPoint: ion_ios.Waypoint, waypoints: [ion_ios.Waypoint]?, accessibilityMode: Swift.Bool?) async -> ion_ios.Route?
+  #endif
+  func checkLicensing() async -> Swift.Bool
+  #if compiler(>=5.3) && $NonescapableTypes
+  func getLevelInfo(levelId: Swift.Int) async -> ion_ios.LevelInfo?
   #endif
 }
 public enum GlobalCoord {
@@ -420,3 +672,16 @@ extension ion_ios.GeofenceIndoorCategory : Swift.RawRepresentable {}
 extension ion_ios.GeofenceTriggerEvent : Swift.Equatable {}
 extension ion_ios.GeofenceTriggerEvent : Swift.Hashable {}
 extension ion_ios.GeofenceTriggerEvent : Swift.RawRepresentable {}
+extension ion_ios.SystemGeofenceType : Swift.Equatable {}
+extension ion_ios.SystemGeofenceType : Swift.Hashable {}
+extension ion_ios.SystemGeofenceType : Swift.RawRepresentable {}
+extension ion_ios.SystemGeofenceUse : Swift.Equatable {}
+extension ion_ios.SystemGeofenceUse : Swift.Hashable {}
+extension ion_ios.SystemGeofenceUse : Swift.RawRepresentable {}
+extension ion_ios.ConnectorSubType : Swift.Equatable {}
+extension ion_ios.ConnectorSubType : Swift.Hashable {}
+extension ion_ios.ConnectorSubType : Swift.RawRepresentable {}
+extension ion_ios.NavInstructionType : Swift.Equatable {}
+extension ion_ios.NavInstructionType : Swift.Hashable {}
+extension ion_ios.NavInstructionType : Swift.RawRepresentable {}
+extension CxxStocorWrapper.CxxStocorWrapper : Swift.Sendable {}

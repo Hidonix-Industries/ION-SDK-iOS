@@ -24,6 +24,12 @@ This SDK is available from iOS 15 and above.
 
 Add the latest release as SPM dependency to your XCode project or download and unzip the .xcframework file from the Releases page.
 
+To use the library, add the following import statement at the top of your Swift files:
+
+```swift
+import ion_ios
+```
+
 Before you start using the SDK, you must configure your Xcode project and the ION CMS.
 
 ### 1. CMS Configuration

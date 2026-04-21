@@ -43,6 +43,17 @@ Provide the generated API Key to your Xcode project:
 4. Add a new field named `ionSdkApiClientKey`.
 5. Set the value of `ionSdkApiClientKey` to the API Key provided to you via the ION CMS.
 
+### 3. Required Permissions (Info.plist)
+
+Add the following keys to your app's `Info.plist` to request necessary permissions:
+
+| Key | Description |
+| :--- | :--- |
+| `NSMotionUsageDescription` | Required for motion-based positioning and environment detection. |
+| `NSLocationWhenInUseUsageDescription` | Required for iBeacon ranging and outdoor GPS. |
+| `NSLocationAlwaysAndWhenInUseUsageDescription` | Required for background updates and proximity features. |
+| `NSBluetoothAlwaysUsageDescription` | Required for iBeacon-related services. |
+
 ---
 
 ## Core Integration

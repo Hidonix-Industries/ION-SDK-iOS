@@ -7,7 +7,6 @@ import CoreGraphics
 import CoreLocation
 import CoreMotion
 import CryptoKit
-import CxxStocorWrapper
 import Foundation
 import Networking
 import Swift
@@ -599,11 +598,11 @@ final public class IONLocationManager : ion_ios.IONLocationManagerProtocol {
   final public func getFullStandardPoiDetail(poiID: Swift.Int) async -> ion_ios.FullStandardPoi?
   #endif
   #if compiler(>=5.3) && $NonescapableTypes
-  final public func getRoute(endPoint: ion_ios.Waypoint, waypoints: [ion_ios.Waypoint]?, accessibilityMode: Swift.Bool?) async -> ion_ios.Route?
+  @_Concurrency.MainActor final public func getRoute(endPoint: ion_ios.Waypoint, waypoints: [ion_ios.Waypoint]?, accessibilityMode: Swift.Bool?) async -> ion_ios.Route?
   #endif
   final public func checkLicensing() async -> Swift.Bool
   #if compiler(>=5.3) && $NonescapableTypes
-  final public func getLevelInfo(levelId: Swift.Int) async -> ion_ios.LevelInfo?
+  @_Concurrency.MainActor final public func getLevelInfo(levelId: Swift.Int) async -> ion_ios.LevelInfo?
   #endif
   @objc deinit
 }

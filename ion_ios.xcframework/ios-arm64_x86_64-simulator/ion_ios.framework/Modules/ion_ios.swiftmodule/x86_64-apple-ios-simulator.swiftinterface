@@ -682,4 +682,3 @@ extension ion_ios.ConnectorSubType : Swift.RawRepresentable {}
 extension ion_ios.NavInstructionType : Swift.Equatable {}
 extension ion_ios.NavInstructionType : Swift.Hashable {}
 extension ion_ios.NavInstructionType : Swift.RawRepresentable {}
-extension CxxStocorWrapper.CxxStocorWrapper : Swift.Sendable {}

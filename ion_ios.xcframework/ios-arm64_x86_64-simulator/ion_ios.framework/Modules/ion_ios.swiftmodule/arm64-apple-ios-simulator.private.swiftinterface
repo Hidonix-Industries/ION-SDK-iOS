@@ -8,6 +8,7 @@ import CoreLocation
 import CoreMotion
 import CryptoKit
 import Foundation
+import Networking
 import Swift
 import SwiftUI
 import _Concurrency
@@ -340,6 +341,18 @@ public struct Location : Swift.Codable, Swift.Sendable {
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
+public struct LocationSummary : Swift.Codable, Swift.Sendable {
+  public let id: Swift.Int
+  public let name: Swift.String
+  public let address: Swift.String
+  public let coordinate: ion_ios.GeoCoordinate
+  public let imageUrl: Swift.String
+  public let thumbnailUrl: Swift.String
+  public let creationDate: Swift.String?
+  public let lastUpdate: Swift.String?
+  public func encode(to encoder: any Swift.Encoder) throws
+  public init(from decoder: any Swift.Decoder) throws
+}
 public struct NavigationMap : Swift.Codable, Swift.Sendable {
   public var map: ion_ios.LevelMap
   public func encode(to encoder: any Swift.Encoder) throws
@@ -457,6 +470,7 @@ public protocol IONStreamProtocol : AnyObject {
   var positionValues: _Concurrency.AsyncStream<_LocationEssentials.CLLocation> { get }
   var headingValues: _Concurrency.AsyncStream<Swift.Double> { get }
   var floorValues: _Concurrency.AsyncStream<ion_ios.Level> { get }
+  var locationValues: _Concurrency.AsyncStream<ion_ios.Location> { get }
   var calibrationValues: _Concurrency.AsyncStream<Swift.Bool> { get }
   var buildingValues: _Concurrency.AsyncStream<ion_ios.BuildingEventEnum> { get }
   var venueValues: _Concurrency.AsyncStream<ion_ios.VenueEventEnum> { get }
@@ -478,6 +492,7 @@ public protocol IONStreamProtocol : AnyObject {
   #if compiler(>=5.3) && $NonescapableTypes
   func getLevelInfo(levelId: Swift.Int) async -> ion_ios.LevelInfo?
   #endif
+  func getLocationSummaries() async -> [ion_ios.LocationSummary]
 }
 final public class IONStreamService : ion_ios.IONStreamProtocol {
   public init()
@@ -493,6 +508,9 @@ final public class IONStreamService : ion_ios.IONStreamProtocol {
     get
   }
   final public var floorValues: _Concurrency.AsyncStream<ion_ios.Level> {
+    get
+  }
+  final public var locationValues: _Concurrency.AsyncStream<ion_ios.Location> {
     get
   }
   final public var calibrationValues: _Concurrency.AsyncStream<Swift.Bool> {
@@ -538,12 +556,14 @@ final public class IONStreamService : ion_ios.IONStreamProtocol {
   #if compiler(>=5.3) && $NonescapableTypes
   final public func getLevelInfo(levelId: Swift.Int) async -> ion_ios.LevelInfo?
   #endif
+  final public func getLocationSummaries() async -> [ion_ios.LocationSummary]
   @objc deinit
 }
 extension ion_ios.IONStreamService : ion_ios.IONLocationManagerDelegate {
   final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, didUpdate position: _LocationEssentials.CLLocation)
   final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, didUpdate newHeading: Swift.Double)
   final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, didChangeFloor floor: ion_ios.Level)
+  final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, didEnterLocation location: ion_ios.Location)
   final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, didEnterBuilding building: ion_ios.Building)
   final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, didExitBuilding building: ion_ios.Building)
   final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, didEnterVenue building: ion_ios.Building)
@@ -603,12 +623,14 @@ final public class IONLocationManager : ion_ios.IONLocationManagerProtocol {
   #if compiler(>=5.3) && $NonescapableTypes
   @_Concurrency.MainActor final public func getLevelInfo(levelId: Swift.Int) async -> ion_ios.LevelInfo?
   #endif
+  final public func getLocationSummaries() async -> [ion_ios.LocationSummary]
   @objc deinit
 }
 public protocol IONLocationManagerDelegate : AnyObject {
   func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didUpdate position: _LocationEssentials.CLLocation)
   func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didUpdate newHeading: Swift.Double)
   func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didChangeFloor floor: ion_ios.Level)
+  func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didEnterLocation location: ion_ios.Location)
   func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didEnterBuilding building: ion_ios.Building)
   func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didExitBuilding building: ion_ios.Building)
   func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didEnterVenue building: ion_ios.Building)
@@ -630,6 +652,7 @@ extension ion_ios.IONLocationManagerDelegate {
   public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didUpdate position: _LocationEssentials.CLLocation)
   public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didUpdate newHeading: Swift.Double)
   public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didChangeFloor floor: ion_ios.Level)
+  public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didEnterLocation location: ion_ios.Location)
   public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didEnterBuilding building: ion_ios.Building)
   public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didExitBuilding building: ion_ios.Building)
   public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didEnterVenue building: ion_ios.Building)
@@ -657,6 +680,7 @@ public protocol IONLocationManagerProtocol : AnyObject {
   #if compiler(>=5.3) && $NonescapableTypes
   func getLevelInfo(levelId: Swift.Int) async -> ion_ios.LevelInfo?
   #endif
+  func getLocationSummaries() async -> [ion_ios.LocationSummary]
 }
 public enum GlobalCoord {
   public static func getCoordinateFromPosition(level: ion_ios.Level, x: Swift.Double, y: Swift.Double) -> _LocationEssentials.CLLocationCoordinate2D

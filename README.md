@@ -90,6 +90,7 @@ Implement the `IONLocationManagerDelegate` protocol to receive real-time updates
 - `indoorLocationManager(_:didUpdate: Double)`: Called when a new heading (orientation) update is available.
 
 #### Floor and Building Transitions
+- `indoorLocationManager(_:didEnterLocation: Location)`: Notifies when the user enters a Location.
 - `indoorLocationManager(_:didChangeFloor: Level)`: Notifies when the user's floor level changes.
 - `indoorLocationManager(_:didEnterBuilding: Building)`: Notifies when the user enters a building.
 - `indoorLocationManager(_:didExitBuilding: Building)`: Notifies when the user exits a building.
@@ -238,6 +239,7 @@ The positioning models follow a hierarchical structure, from the overall site lo
   - `id`: Unique identifier.
   - `beacons_base_uuids`: A list of base UUIDs for all Bluetooth beacons belonging to this structure.
   - `address`: The physical mailing address of the building.
+  - `dict_major_beacons`: A dict to match Beacon Major and Level Id
 
 - **Building**: Represents a full physical structure within a location.
   - `name`: Name of the building.

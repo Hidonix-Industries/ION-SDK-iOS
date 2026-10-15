@@ -2,18 +2,33 @@
 // swift-compiler-version: Apple Swift version 6.3.2 (swiftlang-6.3.2.1.108 clang-2100.1.1.101)
 // swift-module-flags: -target x86_64-apple-ios15.0-simulator -enable-objc-interop -enable-library-evolution -swift-version 6 -O -enable-experimental-feature DebugDescriptionMacro -module-name ion_ios -package-name ion_ios_sdk
 // swift-module-flags-ignorable: -no-verify-emitted-module-interface -formal-cxx-interoperability-mode=off -interface-compiler-version 6.3.2
+import ARKit
 import Combine
-import CoreGraphics
 import CoreLocation
 import CoreMotion
 import CryptoKit
 import Foundation
+import RealityKit
 import Swift
 import SwiftUI
+import UIKit
 import _Concurrency
+import _RealityKit_SwiftUI
 import _StringProcessing
 import _SwiftConcurrencyShims
 import simd
+public struct ARMarker : Swift.Codable, Swift.Equatable, Swift.Sendable {
+  public let id: Swift.Int
+  public let imageUrl: Swift.String
+  public let physicalWidth: Swift.Float
+  public let x: Swift.Float
+  public let y: Swift.Float
+  public let heading: Swift.Float
+  public let floorId: Swift.Int
+  public static func == (a: ion_ios.ARMarker, b: ion_ios.ARMarker) -> Swift.Bool
+  public func encode(to encoder: any Swift.Encoder) throws
+  public init(from decoder: any Swift.Decoder) throws
+}
 public struct AcquisitionLevel : Swift.Codable {
   public let id: Swift.String
   public let levelNumber: Swift.Int
@@ -126,6 +141,34 @@ public enum SystemGeofenceUse : Swift.Int, Swift.Codable, Swift.Sendable {
   public var rawValue: Swift.Int {
     get
   }
+}
+public enum SdkFeature : Swift.Int, Swift.Sendable, Swift.Equatable, Swift.CaseIterable {
+  case poi
+  case safety
+  case wayfinding
+  case arNavigation
+  case arTurnByTurn
+  public init?(rawValue: Swift.Int)
+  public typealias AllCases = [ion_ios.SdkFeature]
+  public typealias RawValue = Swift.Int
+  nonisolated public static var allCases: [ion_ios.SdkFeature] {
+    get
+  }
+  public var rawValue: Swift.Int {
+    get
+  }
+}
+public enum LicenseStatus : Swift.Sendable, Swift.Equatable {
+  case valid(features: [ion_ios.SdkFeature])
+  case invalid
+  public var isValid: Swift.Bool {
+    get
+  }
+  public var features: [ion_ios.SdkFeature] {
+    get
+  }
+  public func grants(_ feature: ion_ios.SdkFeature) -> Swift.Bool
+  public static func == (a: ion_ios.LicenseStatus, b: ion_ios.LicenseStatus) -> Swift.Bool
 }
 public struct FullStandardPoi : Swift.Codable, Swift.Sendable, ion_ios.Poi {
   public let id: Swift.Int
@@ -274,6 +317,26 @@ public struct GeoCoordinate : Swift.Codable, Swift.Sendable {
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
+public enum IndoorPositionReliability : Swift.Equatable, Swift.Sendable {
+  case notReliable(ion_ios.IndoorPositionUnreliableReason)
+  case reliable
+  public var isReliable: Swift.Bool {
+    get
+  }
+  public static func == (a: ion_ios.IndoorPositionReliability, b: ion_ios.IndoorPositionReliability) -> Swift.Bool
+}
+public enum IndoorPositionUnreliableReason : Swift.Equatable, Swift.Sendable {
+  case waitingForIndoorPositioning
+  case waitingForUserToWalk
+  case converging
+  case waitingForARMarker
+  case arReferenceLost
+  public static func == (a: ion_ios.IndoorPositionUnreliableReason, b: ion_ios.IndoorPositionUnreliableReason) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
 public struct Level : Swift.Codable, Swift.Sendable {
   public var name: Swift.String
   public var number: Swift.Int
@@ -344,6 +407,24 @@ public struct LocationSummary : Swift.Codable, Swift.Sendable {
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
+public enum MagCalibrationLevel : Swift.Comparable, Swift.CaseIterable, Swift.Sendable {
+  case good
+  case warning
+  case bad
+  public static func < (a: ion_ios.MagCalibrationLevel, b: ion_ios.MagCalibrationLevel) -> Swift.Bool
+  public static func == (a: ion_ios.MagCalibrationLevel, b: ion_ios.MagCalibrationLevel) -> Swift.Bool
+  public typealias AllCases = [ion_ios.MagCalibrationLevel]
+  nonisolated public static var allCases: [ion_ios.MagCalibrationLevel] {
+    get
+  }
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+extension ion_ios.MagCalibrationLevel {
+  public init(percent: Swift.Int?)
+}
 public struct NavigationMap : Swift.Codable, Swift.Sendable {
   public var map: ion_ios.LevelMap
   public func encode(to encoder: any Swift.Encoder) throws
@@ -358,6 +439,46 @@ public struct OutdoorLevel : Swift.Codable, Swift.Sendable {
   public var georeference: [ion_ios.GeoCoordinate]
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
+}
+public enum PositionSource : Swift.String, Swift.Sendable, Swift.Equatable {
+  case gps
+  case filterAR
+  case filter
+  case deadReckoning
+  case outdoorDeadReckoning
+  public var isIndoor: Swift.Bool {
+    get
+  }
+  public init?(rawValue: Swift.String)
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+public struct PositionUpdate : Swift.Sendable, Swift.Equatable {
+  public let position: _LocationEssentials.CLLocation
+  public let source: ion_ios.PositionSource
+  public init(position: _LocationEssentials.CLLocation, source: ion_ios.PositionSource)
+  public static func == (a: ion_ios.PositionUpdate, b: ion_ios.PositionUpdate) -> Swift.Bool
+}
+public enum PositioningAvailability : Swift.Equatable, Swift.Sendable {
+  case determining
+  case available
+  case unavailable(ion_ios.PositioningUnavailableReason)
+  public var isAvailable: Swift.Bool {
+    get
+  }
+  public static func == (a: ion_ios.PositioningAvailability, b: ion_ios.PositioningAvailability) -> Swift.Bool
+}
+public enum PositioningUnavailableReason : Swift.Equatable, Swift.Sendable {
+  case locationPermissionDenied
+  case locationPermissionRestricted
+  case noLocationNearby
+  public static func == (a: ion_ios.PositioningUnavailableReason, b: ion_ios.PositioningUnavailableReason) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
 }
 public struct Route : Swift.Codable, Swift.Sendable {
   public let type: Swift.String
@@ -453,10 +574,14 @@ public protocol IONStreamProtocol : AnyObject {
   @_Concurrency.MainActor func stop()
   var ionObserver: (any ion_ios.IONLocationManagerProtocol)? { get }
   var positionValues: _Concurrency.AsyncStream<_LocationEssentials.CLLocation> { get }
+  var positionUpdateValues: _Concurrency.AsyncStream<ion_ios.PositionUpdate> { get }
   var headingValues: _Concurrency.AsyncStream<Swift.Double> { get }
+  var indoorPositionReliabilityValues: _Concurrency.AsyncStream<ion_ios.IndoorPositionReliability> { get }
+  var positioningAvailabilityValues: _Concurrency.AsyncStream<ion_ios.PositioningAvailability> { get }
   var floorValues: _Concurrency.AsyncStream<ion_ios.Level> { get }
+  var arMarkerValues: _Concurrency.AsyncStream<ion_ios.ARMarker> { get }
   var locationValues: _Concurrency.AsyncStream<ion_ios.Location> { get }
-  var calibrationValues: _Concurrency.AsyncStream<Swift.Bool> { get }
+  var calibrationValues: _Concurrency.AsyncStream<ion_ios.CalibrationEvent> { get }
   var buildingValues: _Concurrency.AsyncStream<ion_ios.BuildingEventEnum> { get }
   var venueValues: _Concurrency.AsyncStream<ion_ios.VenueEventEnum> { get }
   var geofenceValues: _Concurrency.AsyncStream<ion_ios.GeofenceEvent> { get }
@@ -469,12 +594,13 @@ public protocol IONStreamProtocol : AnyObject {
   var enteredIndoorAreaValues: _Concurrency.AsyncStream<ion_ios.SystemGeofence> { get }
   func getFullStandardPoiDetail(poiID: Swift.Int) async -> ion_ios.FullStandardPoi?
   func getRoute(endPoint: ion_ios.Waypoint, waypoints: [ion_ios.Waypoint]?, accessibilityMode: Swift.Bool?) async -> ion_ios.Route?
-  func checkLicensing() async -> Swift.Bool
+  func checkLicensing() async -> ion_ios.LicenseStatus
   func getLevelInfo(levelId: Swift.Int) async -> ion_ios.LevelInfo?
   func getLocationSummaries() async -> [ion_ios.LocationSummary]
 }
 final public class IONStreamService : ion_ios.IONStreamProtocol {
   public init()
+  @_Concurrency.MainActor public init(arView: RealityKit.ARView)
   final public var ionObserver: (any ion_ios.IONLocationManagerProtocol)? {
     get
   }
@@ -483,16 +609,28 @@ final public class IONStreamService : ion_ios.IONStreamProtocol {
   final public var positionValues: _Concurrency.AsyncStream<_LocationEssentials.CLLocation> {
     get
   }
+  final public var positionUpdateValues: _Concurrency.AsyncStream<ion_ios.PositionUpdate> {
+    get
+  }
   final public var headingValues: _Concurrency.AsyncStream<Swift.Double> {
+    get
+  }
+  final public var indoorPositionReliabilityValues: _Concurrency.AsyncStream<ion_ios.IndoorPositionReliability> {
+    get
+  }
+  final public var positioningAvailabilityValues: _Concurrency.AsyncStream<ion_ios.PositioningAvailability> {
     get
   }
   final public var floorValues: _Concurrency.AsyncStream<ion_ios.Level> {
     get
   }
+  final public var arMarkerValues: _Concurrency.AsyncStream<ion_ios.ARMarker> {
+    get
+  }
   final public var locationValues: _Concurrency.AsyncStream<ion_ios.Location> {
     get
   }
-  final public var calibrationValues: _Concurrency.AsyncStream<Swift.Bool> {
+  final public var calibrationValues: _Concurrency.AsyncStream<ion_ios.CalibrationEvent> {
     get
   }
   final public var buildingValues: _Concurrency.AsyncStream<ion_ios.BuildingEventEnum> {
@@ -527,24 +665,27 @@ final public class IONStreamService : ion_ios.IONStreamProtocol {
   }
   final public func getFullStandardPoiDetail(poiID: Swift.Int) async -> ion_ios.FullStandardPoi?
   final public func getRoute(endPoint: ion_ios.Waypoint, waypoints: [ion_ios.Waypoint]?, accessibilityMode: Swift.Bool?) async -> ion_ios.Route?
-  final public func checkLicensing() async -> Swift.Bool
+  final public func checkLicensing() async -> ion_ios.LicenseStatus
   final public func getLevelInfo(levelId: Swift.Int) async -> ion_ios.LevelInfo?
   final public func getLocationSummaries() async -> [ion_ios.LocationSummary]
   @objc deinit
 }
 extension ion_ios.IONStreamService : ion_ios.IONLocationManagerDelegate {
-  final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, didUpdate position: _LocationEssentials.CLLocation)
+  final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, didUpdate position: _LocationEssentials.CLLocation, source: ion_ios.PositionSource)
   final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, didUpdate newHeading: Swift.Double)
+  final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, didUpdate indoorPositionReliability: ion_ios.IndoorPositionReliability)
+  final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, didUpdate positioningAvailability: ion_ios.PositioningAvailability)
   final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, didChangeFloor floor: ion_ios.Level)
+  final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, didRecognizeARMarker marker: ion_ios.ARMarker)
   final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, didEnterLocation location: ion_ios.Location)
   final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, didEnterBuilding building: ion_ios.Building)
   final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, didExitBuilding building: ion_ios.Building)
   final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, didEnterVenue building: ion_ios.Building)
   final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, didExitVenue building: ion_ios.Building)
-  final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, calibrationIsNeeded: Swift.Bool)
+  final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, shouldCalibrate: Swift.Bool, calibrationLevel: ion_ios.MagCalibrationLevel, percentage: Swift.Int)
   final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, triggeredIndoorGeofence event: ion_ios.GeofenceTriggerEvent, indoorGeofence: ion_ios.IndoorGeofence, indoorGeofenceResponse: ion_ios.IndoorGeofenceResponse?)
-  final public func indoorLocationManagaer(_ positionObserver: any ion_ios.IONLocationManagerProtocol, poisForFloor: ion_ios.Level, fullStandardPois: [ion_ios.FullStandardPoi], servicePois: [ion_ios.ServicePoi])
-  final public func indoorLocationManagaer(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, poisForLocation: ion_ios.Location, standardPois: [ion_ios.StandardPoi], servicePois: [ion_ios.ServicePoi])
+  final public func indoorLocationManager(_ positionObserver: any ion_ios.IONLocationManagerProtocol, poisForFloor: ion_ios.Level, fullStandardPois: [ion_ios.FullStandardPoi], servicePois: [ion_ios.ServicePoi])
+  final public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, poisForLocation: ion_ios.Location, standardPois: [ion_ios.StandardPoi], servicePois: [ion_ios.ServicePoi])
   final public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, buildingTransitionGeofence: ion_ios.SystemGeofence, exitedBuilding: ion_ios.Building, enteredBuilding: ion_ios.Building)
   final public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, enteredNotMappedArea: ion_ios.SystemGeofence)
   final public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, enteredMappedArea: ion_ios.SystemGeofence)
@@ -574,6 +715,12 @@ public struct PoiEvent {
   public let fullStandardPois: [ion_ios.FullStandardPoi]
   public let servicePoi: [ion_ios.ServicePoi]
 }
+public struct CalibrationEvent : Swift.Equatable, Swift.Sendable {
+  public let shouldCalibrate: Swift.Bool
+  public let calibrationLevel: ion_ios.MagCalibrationLevel
+  public let percentage: Swift.Int
+  public static func == (a: ion_ios.CalibrationEvent, b: ion_ios.CalibrationEvent) -> Swift.Bool
+}
 public struct PoiForLocationEvent {
   public let location: ion_ios.Location
   public let standardPois: [ion_ios.StandardPoi]
@@ -581,29 +728,34 @@ public struct PoiForLocationEvent {
 }
 final public class IONLocationManager : ion_ios.IONLocationManagerProtocol {
   public init()
+  @_Concurrency.MainActor public init(arView: RealityKit.ARView)
   weak final public var delegate: (any ion_ios.IONLocationManagerDelegate)?
   @_Concurrency.MainActor final public func start()
   @_Concurrency.MainActor final public func stop()
   final public func getFullStandardPoiDetail(poiID: Swift.Int) async -> ion_ios.FullStandardPoi?
   @_Concurrency.MainActor final public func getRoute(endPoint: ion_ios.Waypoint, waypoints: [ion_ios.Waypoint]?, accessibilityMode: Swift.Bool?) async -> ion_ios.Route?
-  final public func checkLicensing() async -> Swift.Bool
+  final public func checkLicensing() async -> ion_ios.LicenseStatus
   @_Concurrency.MainActor final public func getLevelInfo(levelId: Swift.Int) async -> ion_ios.LevelInfo?
   final public func getLocationSummaries() async -> [ion_ios.LocationSummary]
   @objc deinit
 }
 public protocol IONLocationManagerDelegate : AnyObject {
+  func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didUpdate position: _LocationEssentials.CLLocation, source: ion_ios.PositionSource)
   func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didUpdate position: _LocationEssentials.CLLocation)
   func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didUpdate newHeading: Swift.Double)
+  func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didUpdate indoorPositionReliability: ion_ios.IndoorPositionReliability)
+  func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didUpdate positioningAvailability: ion_ios.PositioningAvailability)
   func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didChangeFloor floor: ion_ios.Level)
+  func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didRecognizeARMarker marker: ion_ios.ARMarker)
   func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didEnterLocation location: ion_ios.Location)
   func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didEnterBuilding building: ion_ios.Building)
   func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didExitBuilding building: ion_ios.Building)
   func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didEnterVenue building: ion_ios.Building)
   func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didExitVenue building: ion_ios.Building)
-  func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, calibrationIsNeeded: Swift.Bool)
+  func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, shouldCalibrate: Swift.Bool, calibrationLevel: ion_ios.MagCalibrationLevel, percentage: Swift.Int)
   func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, triggeredIndoorGeofence event: ion_ios.GeofenceTriggerEvent, indoorGeofence: ion_ios.IndoorGeofence, indoorGeofenceResponse: ion_ios.IndoorGeofenceResponse?)
-  func indoorLocationManagaer(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, poisForFloor: ion_ios.Level, fullStandardPois: [ion_ios.FullStandardPoi], servicePois: [ion_ios.ServicePoi])
-  func indoorLocationManagaer(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, poisForLocation: ion_ios.Location, standardPois: [ion_ios.StandardPoi], servicePois: [ion_ios.ServicePoi])
+  func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, poisForFloor: ion_ios.Level, fullStandardPois: [ion_ios.FullStandardPoi], servicePois: [ion_ios.ServicePoi])
+  func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, poisForLocation: ion_ios.Location, standardPois: [ion_ios.StandardPoi], servicePois: [ion_ios.ServicePoi])
   func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, buildingTransitionGeofence: ion_ios.SystemGeofence, exitedBuilding: ion_ios.Building, enteredBuilding: ion_ios.Building)
   func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, enteredNotMappedArea: ion_ios.SystemGeofence)
   func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, enteredMappedArea: ion_ios.SystemGeofence)
@@ -612,17 +764,27 @@ public protocol IONLocationManagerDelegate : AnyObject {
   func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, licenseIsValid: Swift.Bool)
 }
 extension ion_ios.IONLocationManagerDelegate {
+  public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didUpdate position: _LocationEssentials.CLLocation, source: ion_ios.PositionSource)
   public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didUpdate position: _LocationEssentials.CLLocation)
   public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didUpdate newHeading: Swift.Double)
+  public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didUpdate indoorPositionReliability: ion_ios.IndoorPositionReliability)
+  public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didUpdate positioningAvailability: ion_ios.PositioningAvailability)
   public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didChangeFloor floor: ion_ios.Level)
+  public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didRecognizeARMarker marker: ion_ios.ARMarker)
   public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didEnterLocation location: ion_ios.Location)
   public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didEnterBuilding building: ion_ios.Building)
   public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didExitBuilding building: ion_ios.Building)
   public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didEnterVenue building: ion_ios.Building)
   public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, didExitVenue building: ion_ios.Building)
-  public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, calibrationIsNeeded: Swift.Bool)
+  public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, shouldCalibrate: Swift.Bool, calibrationLevel: ion_ios.MagCalibrationLevel, percentage: Swift.Int)
   public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, triggeredIndoorGeofence event: ion_ios.GeofenceTriggerEvent, indoorGeofence: ion_ios.IndoorGeofence, indoorGeofenceResponse: ion_ios.IndoorGeofenceResponse?)
-  public func indoorLocationManagaer(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, poisForFloor: ion_ios.Level, fullStandardPois: [ion_ios.FullStandardPoi], servicePois: [ion_ios.ServicePoi])
+  public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, poisForFloor: ion_ios.Level, fullStandardPois: [ion_ios.FullStandardPoi], servicePois: [ion_ios.ServicePoi])
+  public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, poisForLocation: ion_ios.Location, standardPois: [ion_ios.StandardPoi], servicePois: [ion_ios.ServicePoi])
+  public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, buildingTransitionGeofence: ion_ios.SystemGeofence, exitedBuilding: ion_ios.Building, enteredBuilding: ion_ios.Building)
+  public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, enteredNotMappedArea: ion_ios.SystemGeofence)
+  public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, enteredMappedArea: ion_ios.SystemGeofence)
+  public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, enteredOutdoorArea: ion_ios.SystemGeofence)
+  public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, enteredIndoorArea: ion_ios.SystemGeofence)
   public func indoorLocationManager(_ ionLocationManager: any ion_ios.IONLocationManagerProtocol, licenseIsValid: Swift.Bool)
 }
 public protocol IONLocationManagerProtocol : AnyObject {
@@ -631,7 +793,7 @@ public protocol IONLocationManagerProtocol : AnyObject {
   @_Concurrency.MainActor func stop()
   func getFullStandardPoiDetail(poiID: Swift.Int) async -> ion_ios.FullStandardPoi?
   func getRoute(endPoint: ion_ios.Waypoint, waypoints: [ion_ios.Waypoint]?, accessibilityMode: Swift.Bool?) async -> ion_ios.Route?
-  func checkLicensing() async -> Swift.Bool
+  func checkLicensing() async -> ion_ios.LicenseStatus
   func getLevelInfo(levelId: Swift.Int) async -> ion_ios.LevelInfo?
   func getLocationSummaries() async -> [ion_ios.LocationSummary]
 }
@@ -639,6 +801,7 @@ public enum GlobalCoord {
   public static func getCoordinateFromPosition(level: ion_ios.Level, x: Swift.Double, y: Swift.Double) -> _LocationEssentials.CLLocationCoordinate2D
   public static func getCoordinateFromPosition(outdoorLevel: ion_ios.OutdoorLevel, x: Swift.Double, y: Swift.Double) -> _LocationEssentials.CLLocationCoordinate2D
   public static func coordinate(from origin: _LocationEssentials.CLLocation, distanceMeters: Swift.Double, bearingDegrees: Swift.Double) -> _LocationEssentials.CLLocationCoordinate2D
+  public static func getPositionFromCoordinate(outdoorLevel: ion_ios.OutdoorLevel, coordinate: _LocationEssentials.CLLocationCoordinate2D) -> (x: Swift.Double, y: Swift.Double)
   public static func getPositionFromCoordinate(level: ion_ios.Level, coordinate: _LocationEssentials.CLLocationCoordinate2D) -> (x: Swift.Double, y: Swift.Double)
 }
 extension ion_ios.GeofenceIndoorCategory : Swift.Equatable {}
@@ -653,6 +816,13 @@ extension ion_ios.SystemGeofenceType : Swift.RawRepresentable {}
 extension ion_ios.SystemGeofenceUse : Swift.Equatable {}
 extension ion_ios.SystemGeofenceUse : Swift.Hashable {}
 extension ion_ios.SystemGeofenceUse : Swift.RawRepresentable {}
+extension ion_ios.SdkFeature : Swift.Hashable {}
+extension ion_ios.SdkFeature : Swift.RawRepresentable {}
+extension ion_ios.IndoorPositionUnreliableReason : Swift.Hashable {}
+extension ion_ios.MagCalibrationLevel : Swift.Hashable {}
+extension ion_ios.PositionSource : Swift.Hashable {}
+extension ion_ios.PositionSource : Swift.RawRepresentable {}
+extension ion_ios.PositioningUnavailableReason : Swift.Hashable {}
 extension ion_ios.ConnectorSubType : Swift.Equatable {}
 extension ion_ios.ConnectorSubType : Swift.Hashable {}
 extension ion_ios.ConnectorSubType : Swift.RawRepresentable {}
